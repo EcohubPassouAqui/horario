@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horário & Clima Brasil | by rip_sheldoohz</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg: #0a0a1a;
+      --glass: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #e6e6f0;
+      --accent: #00d4ff;
+      --accent-glow: rgba(0, 212, 255, 0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    #bgCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .globe-wrapper {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 40px auto 20px;
+      perspective: 600px;
+    }
+
+    .globe {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #1a3b5c, #050f1a);
+      box-shadow: 
+        0 0 40px var(--accent-glow),
+        inset -20px -20px 40px rgba(0,0,0,0.8),
+        inset 10px 10px 20px rgba(255,255,255,0.05);
+      animation: float 6s ease-in-out infinite, rotate 25s linear infinite;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .globe::before {
+      content: '';
+      position: absolute;
+      top: 20%; left: 25%;
+      width: 60px; height: 40px;
+      background: rgba(0, 255, 200, 0.15);
+      border-radius: 40% 60% 50% 50%;
+      filter: blur(8px);
+      animation: pulse 3s infinite;
+    }
+
+    @keyframes float { 0%, 100% { transform: translateY(0) rotateX(15deg); } 50% { transform: translateY(-8px) rotateX(20deg); } }
+    @keyframes rotate { 0% { background-position: 0% 0%; } 100% { background-position: 200% 200%; } }
+    @keyframes pulse { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.1); } }
+
+    header {
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      padding: 0 20px 20px;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+
+    #main-clock {
+      font-size: 3.5rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      text-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    main {
+      position: relative;
+      z-index: 2;
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .states-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .state-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      backdrop-filter: blur(12px);
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .state-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.4), 0 0 16px var(--accent-glow);
+    }
+
+    .state-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+      transition: left 0.5s;
+    }
+
+    .state-card:hover::before { left: 100%; }
+
+    .state-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .state-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .state-tz {
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+
+    .time-display {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 8px 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .weather {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .weather-icon { font-size: 1.4rem; }
+    .weather-text { font-size: 0.9rem; opacity: 0.85; }
+
+    footer {
+      text-align: center;
+      padding: 30px 20px;
+      font-size: 0.9rem;
+      opacity: 0.6;
+      position: relative;
+      z-index: 2;
+    }
+
+    @media (max-width: 600px) {
+      #main-clock { font-size: 2.4rem; }
+      .states-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="globe-wrapper">
+    <div class="globe"></div>
+  </div>
+
+  <header>
+    <h1>🇧🇷 Horário & Clima Brasil</h1>
+    <div id="main-clock">--:--:--</div>
+  </header>
+
+  <main>
+    <div class="states-grid" id="states-grid"></div>
+  </main>
+
+  <footer>Criado por rip_sheldoohz © 2026</footer>
+
+  <script>
+    // 🌐 PARTÍCULAS DE FUNDO (PONTOS + LINHAS)
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let mouse = { x: null, y: null };
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initParticles();
+    }
+
+    function initParticles() {
+      particles = [];
+      const count = Math.floor((canvas.width * canvas.height) / 8000);
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          size: Math.random() * 2 + 1
+        });
+      }
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(0, 212, 255, 0.7)';
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.15)';
+
+      for (let p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 120) {
+            ctx.lineWidth = 1 - dist / 120;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+        if (mouse.x) {
+          const dx = particles[i].x - mouse.x;
+          const dy = particles[i].y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 180) {
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(drawParticles);
+    }
+
+    window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
+    window.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
+    window.addEventListener('resize', resize);
+    resize();
+    drawParticles();
+
+    // 🌍 DADOS DOS ESTADOS (FUSOS & CLIMA SIMULADO)
+    const states = [
+      { name: "Acre", uf: "AC", tz: "America/Rio_Branco", weather: "🌧️ Chuva", icon: "cloud-rain" },
+      { name: "Alagoas", uf: "AL", tz: "America/Maceio", weather: "☀️ Sol", icon: "sun" },
+      { name: "Amapá", uf: "AP", tz: "America/Belem", weather: "🌤️ Parcial", icon: "cloud-sun" },
+      { name: "Amazonas", uf: "AM", tz: "America/Manaus", weather: "🌦️ Chuva Fraca", icon: "cloud-drizzle" },
+      { name: "Bahia", uf: "BA", tz: "America/Bahia", weather: "☀️ Ensolarado", icon: "sun" },
+      { name: "Ceará", uf: "CE", tz: "America/Fortaleza", weather: "🌤️ Nublado", icon: "cloud-sun" },
+      { name: "Distrito Federal", uf: "DF", tz: "America/Sao_Paulo", weather: "⛅ Parcial", icon: "cloud-sun" },
+      { name: "Espírito Santo", uf: "ES", tz: "America/Sao_Paulo", weather: "🌤️ Sol", icon: "sun" },
+      { name: "Goiás", uf: "GO", tz: "America/Sao_Paulo", weather: "☀️ Quente", icon: "sun" },
+      { name: "Maranhão", uf: "MA", tz: "America/Fortaleza", weather: "🌧️ Tempestade", icon: "cloud-lightning" },
+      { name: "Mato Grosso", uf: "MT", tz: "America/Cuiaba", weather: "⛅ Nublado", icon: "cloud" },
+      { name: "Mato Grosso do Sul", uf: "MS", tz: "America/Campo_Grande", weather: "☀️ Claro", icon: "sun" },
+      { name: "Minas Gerais", uf: "MG", tz: "America/Sao_Paulo", weather: "🌤️ Parcial", icon: "cloud-sun" },
+      { name: "Pará", uf: "PA", tz: "America/Belem", weather: "🌦️ Chuva", icon: "cloud-rain" },
+      { name: "Paraíba", uf: "PB", tz: "America/Fortaleza", weather: "☀️ Sol", icon: "sun" },
+      { name: "Paraná", uf: "PR", tz: "America/Sao_Paulo", weather: "🌤️ Frio", icon: "thermometer" },
+      { name: "Pernambuco", uf: "PE", tz: "America/Recife", weather: "☀️ Quente", icon: "sun" },
+      { name: "Piauí", uf: "PI", tz: "America/Fortaleza", weather: "⛅ Parcial", icon: "cloud-sun" },
+      { name: "Rio de Janeiro", uf: "RJ", tz: "America/Sao_Paulo", weather: "🌤️ Sol", icon: "sun" },
+      { name: "Rio Grande do Norte", uf: "RN", tz: "America/Fortaleza", weather: "☀️ Ensolarado", icon: "sun" },
+      { name: "Rio Grande do Sul", uf: "RS", tz: "America/Sao_Paulo", weather: "🌧️ Chuva", icon: "cloud-rain" },
+      { name: "Rondônia", uf: "RO", tz: "America/Porto_Velho", weather: "🌦️ Chuva Fraca", icon: "cloud-drizzle" },
+      { name: "Roraima", uf: "RR", tz: "America/Boa_Vista", weather: "🌤️ Parcial", icon: "cloud-sun" },
+      { name: "Santa Catarina", uf: "SC", tz: "America/Sao_Paulo", weather: "🌤️ Fresco", icon: "wind" },
+      { name: "São Paulo", uf: "SP", tz: "America/Sao_Paulo", weather: "⛅ Nublado", icon: "cloud" },
+      { name: "Sergipe", uf: "SE", tz: "America/Maceio", weather: "☀️ Sol", icon: "sun" },
+      { name: "Tocantins", uf: "TO", tz: "America/Araguaina", weather: "🌤️ Quente", icon: "sun" },
+      { name: "Fernando de Noronha", uf: "PE-FN", tz: "America/Noronha", weather: "🌊 Brisa", icon: "wind" }
+    ];
+
+    const grid = document.getElementById('states-grid');
+
+    // 🕒 RELÓGIO EM TEMPO REAL
+    function formatTime(date) {
+      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function updateClocks() {
+      const now = new Date();
+      document.getElementById('main-clock').textContent = formatTime(now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }));
+      
+      states.forEach(s => {
+        const el = document.getElementById(`clock-${s.uf}`);
+        if (el) el.textContent = formatTime(now.toLocaleString('pt-BR', { timeZone: s.tz }));
+      });
+    }
+
+    // 🏗️ RENDERIZAR CARDS
+    states.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'state-card';
+      card.innerHTML = `
+        <div class="state-header">
+          <span class="state-name">${s.name}</span>
+          <span class="state-tz">${s.tz.split('/')[1].replace('_', ' ')}</span>
+        </div>
+        <div class="time-display" id="clock-${s.uf}">--:--:--</div>
+        <div class="weather">
+          <span class="weather-icon">${s.weather.split(' ')[0]}</span>
+          <i data-lucide="${s.icon}" style="width:18px;height:18px;opacity:0.8"></i>
+          <span class="weather-text">${s.weather.substring(s.weather.indexOf(' ')+1)}</span>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    lucide.createIcons();
+    setInterval(updateClocks, 1000);
+    updateClocks();
+
+    /* 
+      💡 DICA PARA PREVISÃO REAL:
+      Substitua os dados simulados por uma API como OpenWeatherMap ou WeatherAPI.
+      Exemplo: fetch(`https://api.openweathermap.org/data/2.5/weather?q=${state},BR&appid=SUA_KEY&lang=pt_br`)
+    */
+  </script>
+</body>
+</html>
