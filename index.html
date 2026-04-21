@@ -1,366 +1,1115 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Horário & Clima Brasil | by rip_sheldoohz</title>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    :root {
-      --bg: #0a0a1a;
-      --glass: rgba(255, 255, 255, 0.06);
-      --border: rgba(255, 255, 255, 0.12);
-      --text: #e6e6f0;
-      --accent: #00d4ff;
-      --accent-glow: rgba(0, 212, 255, 0.3);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BR Horário & Clima - Sistema Completo</title>
+    
+    <!-- Three.js para o Globo 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --secondary: #7c3aed;
+            --accent: #06b6d4;
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(15, 15, 25, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    #bgCanvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 0;
-      pointer-events: none;
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
 
-    .globe-wrapper {
-      position: relative;
-      width: 180px;
-      height: 180px;
-      margin: 40px auto 20px;
-      perspective: 600px;
-    }
+        /* Background Canvas */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
 
-    .globe {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #1a3b5c, #050f1a);
-      box-shadow: 
-        0 0 40px var(--accent-glow),
-        inset -20px -20px 40px rgba(0,0,0,0.8),
-        inset 10px 10px 20px rgba(255,255,255,0.05);
-      animation: float 6s ease-in-out infinite, rotate 25s linear infinite;
-      position: relative;
-      overflow: hidden;
-    }
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 40px;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    .globe::before {
-      content: '';
-      position: absolute;
-      top: 20%; left: 25%;
-      width: 60px; height: 40px;
-      background: rgba(0, 255, 200, 0.15);
-      border-radius: 40% 60% 50% 50%;
-      filter: blur(8px);
-      animation: pulse 3s infinite;
-    }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
 
-    @keyframes float { 0%, 100% { transform: translateY(0) rotateX(15deg); } 50% { transform: translateY(-8px) rotateX(20deg); } }
-    @keyframes rotate { 0% { background-position: 0% 0%; } 100% { background-position: 200% 200%; } }
-    @keyframes pulse { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.1); } }
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
 
-    header {
-      text-align: center;
-      position: relative;
-      z-index: 2;
-      padding: 0 20px 20px;
-    }
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    h1 {
-      font-size: clamp(1.8rem, 5vw, 2.8rem);
-      background: linear-gradient(135deg, #fff, var(--accent));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin-bottom: 8px;
-    }
+        .nav-btn:hover, .nav-btn.active {
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.1);
+        }
 
-    #main-clock {
-      font-size: 3.5rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      font-variant-numeric: tabular-nums;
-      color: var(--accent);
-      text-shadow: 0 0 15px var(--accent-glow);
-    }
+        .discord-btn {
+            background: linear-gradient(135deg, #5865F2, #4752C4);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
 
-    main {
-      position: relative;
-      z-index: 2;
-      padding: 20px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
+        .discord-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(88, 101, 242, 0.4);
+        }
 
-    .states-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 16px;
-    }
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 1;
+            padding-top: 100px;
+            min-height: 100vh;
+        }
 
-    .state-card {
-      background: var(--glass);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-      backdrop-filter: blur(12px);
-      transition: transform 0.3s, box-shadow 0.3s;
-      position: relative;
-      overflow: hidden;
-    }
+        .page {
+            display: none;
+            animation: fadeIn 0.6s ease;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
 
-    .state-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.4), 0 0 16px var(--accent-glow);
-    }
+        .page.active {
+            display: block;
+        }
 
-    .state-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-      transition: left 0.5s;
-    }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    .state-card:hover::before { left: 100%; }
+        /* PAGE: INÍCIO */
+        .hero-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            min-height: 70vh;
+        }
 
-    .state-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
+        .globe-container {
+            position: relative;
+            height: 500px;
+            border-radius: 24px;
+            overflow: hidden;
+            background: radial-gradient(circle at center, rgba(0, 212, 255, 0.1), transparent);
+            border: 1px solid var(--border);
+        }
 
-    .state-name {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #fff;
-    }
+        #globeCanvas {
+            width: 100%;
+            height: 100%;
+        }
 
-    .state-tz {
-      font-size: 0.8rem;
-      opacity: 0.7;
-    }
+        .hero-content h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
 
-    .time-display {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin: 8px 0;
-      font-variant-numeric: tabular-nums;
-    }
+        .hero-content p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
 
-    .weather {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-    }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+        }
 
-    .weather-icon { font-size: 1.4rem; }
-    .weather-text { font-size: 0.9rem; opacity: 0.85; }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
 
-    footer {
-      text-align: center;
-      padding: 30px 20px;
-      font-size: 0.9rem;
-      opacity: 0.6;
-      position: relative;
-      z-index: 2;
-    }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+        }
 
-    @media (max-width: 600px) {
-      #main-clock { font-size: 2.4rem; }
-      .states-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* PAGE: HORÁRIO */
+        .clock-section {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .main-clock {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 60px 40px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-clock::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1), transparent);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .clock-location {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .clock-time {
+            font-size: 6rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 4px;
+            position: relative;
+        }
+
+        .clock-date {
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+            position: relative;
+        }
+
+        .weather-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .weather-main {
+            text-align: center;
+        }
+
+        .weather-temp {
+            font-size: 5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+        }
+
+        .weather-desc {
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-top: 10px;
+            text-transform: capitalize;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .detail-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .detail-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .detail-info h4 {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .detail-info p {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* PAGE: SOBRE */
+        .about-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .about-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .about-header h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff, var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .about-header p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .credits-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 50px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+        }
+
+        .credits-section h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .credits-section p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .update-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 12px 24px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 20px;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .globe-container {
+                height: 400px;
+            }
+            
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            
+            .clock-time {
+                font-size: 4rem;
+            }
+            
+            .weather-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .navbar {
+                padding: 15px 20px;
+            }
+            
+            .nav-links {
+                gap: 15px;
+            }
+            
+            .page {
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <canvas id="bgCanvas"></canvas>
+    <canvas id="bgCanvas"></canvas>
 
-  <div class="globe-wrapper">
-    <div class="globe"></div>
-  </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">
+            <i data-lucide="globe-2"></i>
+            <span>BR Horário & Clima</span>
+        </div>
+        
+        <div class="nav-links">
+            <button class="nav-btn active" onclick="showPage('inicio')">
+                <i data-lucide="home"></i>
+                Início
+            </button>
+            <button class="nav-btn" onclick="showPage('horario')">
+                <i data-lucide="clock"></i>
+                Horário
+            </button>
+            <button class="nav-btn" onclick="showPage('sobre')">
+                <i data-lucide="info"></i>
+                Sobre
+            </button>
+            <a href="https://discord.gg/KVNQUWppgx" target="_blank" class="discord-btn">
+                <i data-lucide="message-circle"></i>
+                Discord
+            </a>
+        </div>
+    </nav>
 
-  <header>
-    <h1>🇧🇷 Horário & Clima Brasil</h1>
-    <div id="main-clock">--:--:--</div>
-  </header>
+    <div class="container">
+        <!-- PAGE: INÍCIO -->
+        <section id="inicio" class="page active">
+            <div class="hero-section">
+                <div class="globe-container">
+                    <canvas id="globeCanvas"></canvas>
+                </div>
+                
+                <div class="hero-content">
+                    <h1>Sistema Completo de Horário e Clima</h1>
+                    <p>Visualize em tempo real o horário e as condições climáticas de São Paulo com precisão e design moderno. Desenvolvido com tecnologia de ponta.</p>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i data-lucide="map-pin"></i>
+                            </div>
+                            <div class="stat-value">26</div>
+                            <div class="stat-label">Estados + DF</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i data-lucide="cloud"></i>
+                            </div>
+                            <div class="stat-value">API</div>
+                            <div class="stat-label">Tempo Real</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i data-lucide="zap"></i>
+                            </div>
+                            <div class="stat-value">24/7</div>
+                            <div class="stat-label">Atualizado</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-  <main>
-    <div class="states-grid" id="states-grid"></div>
-  </main>
+        <!-- PAGE: HORÁRIO -->
+        <section id="horario" class="page">
+            <div class="clock-section">
+                <div class="main-clock">
+                    <div class="clock-location">
+                        <i data-lucide="map-pin"></i>
+                        <span>São Paulo, Brasil</span>
+                    </div>
+                    <div class="clock-time" id="mainClock">00:00:00</div>
+                    <div class="clock-date" id="currentDate">Carregando...</div>
+                </div>
 
-  <footer>Criado por rip_sheldoohz © 2026</footer>
+                <div class="weather-section">
+                    <div class="weather-main">
+                        <div id="weatherIcon" style="font-size: 5rem; margin-bottom: 20px;">
+                            <i data-lucide="cloud" style="width: 120px; height: 120px; color: var(--primary);"></i>
+                        </div>
+                        <div class="weather-temp" id="weatherTemp">--°C</div>
+                        <div class="weather-desc" id="weatherDesc">Carregando...</div>
+                    </div>
+                    
+                    <div class="weather-details">
+                        <div class="detail-card">
+                            <div class="detail-icon">
+                                <i data-lucide="droplets"></i>
+                            </div>
+                            <div class="detail-info">
+                                <h4>Umidade</h4>
+                                <p id="humidity">--%</p>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <div class="detail-icon">
+                                <i data-lucide="wind"></i>
+                            </div>
+                            <div class="detail-info">
+                                <h4>Vento</h4>
+                                <p id="windSpeed">-- km/h</p>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <div class="detail-icon">
+                                <i data-lucide="thermometer"></i>
+                            </div>
+                            <div class="detail-info">
+                                <h4>Sensação</h4>
+                                <p id="feelsLike">--°C</p>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <div class="detail-icon">
+                                <i data-lucide="sunrise"></i>
+                            </div>
+                            <div class="detail-info">
+                                <h4>Nascer do Sol</h4>
+                                <p id="sunrise">--:--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-  <script>
-    // 🌐 PARTÍCULAS DE FUNDO (PONTOS + LINHAS)
-    const canvas = document.getElementById('bgCanvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    let mouse = { x: null, y: null };
+        <!-- PAGE: SOBRE -->
+        <section id="sobre" class="page">
+            <div class="about-container">
+                <div class="about-header">
+                    <h2>Sobre o Projeto</h2>
+                    <p>Um sistema moderno e completo desenvolvido com as mais recentes tecnologias web</p>
+                </div>
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      initParticles();
-    }
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="globe"></i>
+                        </div>
+                        <h3>Globo 3D Interativo</h3>
+                        <p>Visualização em tempo real do Brasil em um globo terrestre 3D desenvolvido com Three.js, proporcionando uma experiência imersiva.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="cloud-sun"></i>
+                        </div>
+                        <h3>API de Clima em Tempo Real</h3>
+                        <p>Integração com a Open-Meteo API, fornecendo dados meteorológicos precisos e atualizados sem necessidade de chave de acesso.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="palette"></i>
+                        </div>
+                        <h3>Design Moderno</h3>
+                        <p>Interface glassmorphism com animações suaves, gradientes elegantes e total responsividade para todos os dispositivos.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="clock"></i>
+                        </div>
+                        <h3>Horário Preciso</h3>
+                        <p>Sincronização automática com o fuso horário de São Paulo (GMT-3), atualizado em tempo real a cada segundo.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="code"></i>
+                        </div>
+                        <h3>Código Aberto</h3>
+                        <p>Projeto disponível no GitHub para contribuições da comunidade, totalmente documentado e otimizado.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="refresh-cw"></i>
+                        </div>
+                        <h3>Atualizações Constantes</h3>
+                        <p>Manutenção regular toda segunda e terça-feira com melhorias, correções e novas funcionalidades.</p>
+                    </div>
+                </div>
 
-    function initParticles() {
-      particles = [];
-      const count = Math.floor((canvas.width * canvas.height) / 8000);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          size: Math.random() * 2 + 1
+                <div class="credits-section">
+                    <h3>Créditos & Desenvolvimento</h3>
+                    <p>
+                        Este projeto foi desenvolvido com inteligência artificial de última geração, 
+                        combinando as melhores práticas de desenvolvimento web moderno. 
+                        Utilizamos Three.js para visualizações 3D, Canvas API para animações de partículas, 
+                        e integração com APIs públicas de dados meteorológicos.
+                    </p>
+                    <p>
+                        <strong>Tecnologias:</strong> HTML5, CSS3, JavaScript ES6+, Three.js, Lucide Icons, 
+                        Open-Meteo API<br>
+                        <strong>Design:</strong> Glassmorphism, Gradientes, Animações CSS3<br>
+                        <strong>Performance:</strong> Otimizado para carregamento rápido e baixa latência
+                    </p>
+                    
+                    <div class="update-badge">
+                        <i data-lucide="calendar"></i>
+                        <span>Atualizações: Toda Segunda e Terça-feira</span>
+                    </div>
+                    
+                    <div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border);">
+                        <p style="font-size: 0.9rem;">
+                            <i data-lucide="heart" style="width: 16px; height: 16px; display: inline; color: #ef4444;"></i>
+                            Desenvolvido por IA Avançada | 2026<br>
+                            <small>Disponível no GitHub - Contribuições bem-vindas!</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // ==================== NAVEGAÇÃO ENTRE PÁGINAS ====================
+        function showPage(pageName) {
+            // Remove active de todas as páginas e botões
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Adiciona active na página e botão selecionados
+            document.getElementById(pageName).classList.add('active');
+            event.target.closest('.nav-btn').classList.add('active');
+            
+            // Se for a página inicial, reinicia o globo
+            if (pageName === 'inicio') {
+                initGlobe();
+            }
+        }
+
+        // ==================== BACKGROUND CANVAS (PARTÍCULAS) ====================
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null };
+
+        function resizeBg() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+            initBgParticles();
+        }
+
+        function initBgParticles() {
+            particles = [];
+            const count = Math.floor((bgCanvas.width * bgCanvas.height) / 10000);
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * bgCanvas.width,
+                    y: Math.random() * bgCanvas.height,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    size: Math.random() * 2 + 1
+                });
+            }
+        }
+
+        function animateBg() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgCtx.fillStyle = 'rgba(0, 212, 255, 0.5)';
+            bgCtx.strokeStyle = 'rgba(0, 212, 255, 0.1)';
+
+            particles.forEach((p, i) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                if (p.x < 0 || p.x > bgCanvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > bgCanvas.height) p.vy *= -1;
+
+                bgCtx.beginPath();
+                bgCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                bgCtx.fill();
+
+                // Conectar partículas próximas
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = p.x - particles[j].x;
+                    const dy = p.y - particles[j].y;
+                    const dist = Math.hypot(dx, dy);
+                    
+                    if (dist < 120) {
+                        bgCtx.lineWidth = 1 - dist / 120;
+                        bgCtx.beginPath();
+                        bgCtx.moveTo(p.x, p.y);
+                        bgCtx.lineTo(particles[j].x, particles[j].y);
+                        bgCtx.stroke();
+                    }
+                }
+            });
+
+            requestAnimationFrame(animateBg);
+        }
+
+        window.addEventListener('resize', resizeBg);
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
         });
-      }
-    }
 
-    function drawParticles() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(0, 212, 255, 0.7)';
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.15)';
+        // ==================== GLOBO 3D COM THREE.JS (FOCO BRASIL) ====================
+        let scene, camera, renderer, globe, brazilMarker;
+        let globeInitialized = false;
 
-      for (let p of particles) {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        function initGlobe() {
+            if (globeInitialized) return;
+            
+            const container = document.getElementById('globeCanvas');
+            const width = container.offsetWidth;
+            const height = container.offsetHeight;
 
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
+            // Cena
+            scene = new THREE.Scene();
+            
+            // Câmera
+            camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            camera.position.z = 3;
+            camera.position.y = 0.5;
+            camera.lookAt(0, 0, 0);
 
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 120) {
-            ctx.lineWidth = 1 - dist / 120;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('globeCanvas'),
+                alpha: true,
+                antialias: true
+            });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Luzes
+            const ambientLight = new THREE.AmbientLight(0x404040, 2);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0x00d4ff, 1);
+            directionalLight.position.set(5, 3, 5);
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0x7c3aed, 1, 100);
+            pointLight.position.set(-5, -3, -5);
+            scene.add(pointLight);
+
+            // Criar globo
+            const geometry = new THREE.SphereGeometry(1, 64, 64);
+            
+            // Material com gradiente
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x0a0a0f,
+                emissive: 0x001133,
+                specular: 0x00d4ff,
+                shininess: 100,
+                transparent: true,
+                opacity: 0.9,
+                wireframe: false
+            });
+
+            globe = new THREE.Mesh(geometry, material);
+            scene.add(globe);
+
+            // Adicionar wireframe
+            const wireGeometry = new THREE.SphereGeometry(1.02, 32, 32);
+            const wireMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00d4ff,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.1
+            });
+            const wireframe = new THREE.Mesh(wireGeometry, wireMaterial);
+            scene.add(wireframe);
+
+            // Marcador do Brasil (América do Sul)
+            const brazilGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+            const brazilMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00ff00,
+                emissive: 0x00ff00,
+                emissiveIntensity: 0.5
+            });
+            brazilMarker = new THREE.Mesh(brazilGeometry, brazilMaterial);
+            
+            // Posição aproximada do Brasil (lat: -14.235, lon: -51.925)
+            const lat = -14.235 * Math.PI / 180;
+            const lon = -51.925 * Math.PI / 180;
+            const x = -Math.cos(lat) * Math.cos(lon);
+            const y = Math.sin(lat);
+            const z = Math.cos(lat) * Math.sin(lon);
+            
+            brazilMarker.position.set(x * 1.05, y * 1.05, z * 1.05);
+            scene.add(brazilMarker);
+
+            // Glow effect no Brasil
+            const glowGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00d4ff,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            brazilMarker.add(glow);
+
+            // Partículas ao redor do globo
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 300;
+            const posArray = new Float32Array(particlesCount * 3);
+
+            for (let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 5;
+            }
+
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.005,
+                color: 0x00d4ff,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+
+            // Animação
+            function animate() {
+                requestAnimationFrame(animate);
+
+                if (globe) {
+                    globe.rotation.y += 0.001;
+                    wireframe.rotation.y += 0.001;
+                }
+                
+                if (brazilMarker) {
+                    brazilMarker.rotation.y += 0.005;
+                }
+
+                particlesMesh.rotation.y -= 0.0005;
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+            globeInitialized = true;
+
+            // Responsividade
+            window.addEventListener('resize', () => {
+                if (renderer && camera) {
+                    const newWidth = container.offsetWidth;
+                    const newHeight = container.offsetHeight;
+                    renderer.setSize(newWidth, newHeight);
+                    camera.aspect = newWidth / newHeight;
+                    camera.updateProjectionMatrix();
+                }
+            });
         }
-        if (mouse.x) {
-          const dx = particles[i].x - mouse.x;
-          const dy = particles[i].y - mouse.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 180) {
-            ctx.lineWidth = 0.6;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(mouse.x, mouse.y);
-            ctx.stroke();
-          }
+
+        // ==================== RELÓGIO EM TEMPO REAL ====================
+        function updateClock() {
+            const now = new Date();
+            const options = { 
+                timeZone: 'America/Sao_Paulo',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            const timeString = now.toLocaleTimeString('pt-BR', options);
+            document.getElementById('mainClock').textContent = timeString;
+
+            const dateOptions = {
+                timeZone: 'America/Sao_Paulo',
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            const dateString = now.toLocaleDateString('pt-BR', dateOptions);
+            document.getElementById('currentDate').textContent = dateString;
         }
-      }
-      requestAnimationFrame(drawParticles);
-    }
 
-    window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
-    window.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
-    window.addEventListener('resize', resize);
-    resize();
-    drawParticles();
+        // ==================== API DE CLIMA (OPEN-METEO) ====================
+        // Open-Meteo é uma API gratuita e open-source que não requer chave de API [[1]]
+        async function fetchWeather() {
+            try {
+                // Coordenadas de São Paulo
+                const lat = -23.5505;
+                const lon = -46.6333;
+                
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,wind_speed_10m&daily=sunrise,sunset&timezone=America%2FSao_Paulo`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                updateWeatherDisplay(data);
+            } catch (error) {
+                console.error('Erro ao buscar clima:', error);
+                document.getElementById('weatherDesc').textContent = 'Erro ao carregar';
+            }
+        }
 
-    // 🌍 DADOS DOS ESTADOS (FUSOS & CLIMA SIMULADO)
-    const states = [
-      { name: "Acre", uf: "AC", tz: "America/Rio_Branco", weather: "🌧️ Chuva", icon: "cloud-rain" },
-      { name: "Alagoas", uf: "AL", tz: "America/Maceio", weather: "☀️ Sol", icon: "sun" },
-      { name: "Amapá", uf: "AP", tz: "America/Belem", weather: "🌤️ Parcial", icon: "cloud-sun" },
-      { name: "Amazonas", uf: "AM", tz: "America/Manaus", weather: "🌦️ Chuva Fraca", icon: "cloud-drizzle" },
-      { name: "Bahia", uf: "BA", tz: "America/Bahia", weather: "☀️ Ensolarado", icon: "sun" },
-      { name: "Ceará", uf: "CE", tz: "America/Fortaleza", weather: "🌤️ Nublado", icon: "cloud-sun" },
-      { name: "Distrito Federal", uf: "DF", tz: "America/Sao_Paulo", weather: "⛅ Parcial", icon: "cloud-sun" },
-      { name: "Espírito Santo", uf: "ES", tz: "America/Sao_Paulo", weather: "🌤️ Sol", icon: "sun" },
-      { name: "Goiás", uf: "GO", tz: "America/Sao_Paulo", weather: "☀️ Quente", icon: "sun" },
-      { name: "Maranhão", uf: "MA", tz: "America/Fortaleza", weather: "🌧️ Tempestade", icon: "cloud-lightning" },
-      { name: "Mato Grosso", uf: "MT", tz: "America/Cuiaba", weather: "⛅ Nublado", icon: "cloud" },
-      { name: "Mato Grosso do Sul", uf: "MS", tz: "America/Campo_Grande", weather: "☀️ Claro", icon: "sun" },
-      { name: "Minas Gerais", uf: "MG", tz: "America/Sao_Paulo", weather: "🌤️ Parcial", icon: "cloud-sun" },
-      { name: "Pará", uf: "PA", tz: "America/Belem", weather: "🌦️ Chuva", icon: "cloud-rain" },
-      { name: "Paraíba", uf: "PB", tz: "America/Fortaleza", weather: "☀️ Sol", icon: "sun" },
-      { name: "Paraná", uf: "PR", tz: "America/Sao_Paulo", weather: "🌤️ Frio", icon: "thermometer" },
-      { name: "Pernambuco", uf: "PE", tz: "America/Recife", weather: "☀️ Quente", icon: "sun" },
-      { name: "Piauí", uf: "PI", tz: "America/Fortaleza", weather: "⛅ Parcial", icon: "cloud-sun" },
-      { name: "Rio de Janeiro", uf: "RJ", tz: "America/Sao_Paulo", weather: "🌤️ Sol", icon: "sun" },
-      { name: "Rio Grande do Norte", uf: "RN", tz: "America/Fortaleza", weather: "☀️ Ensolarado", icon: "sun" },
-      { name: "Rio Grande do Sul", uf: "RS", tz: "America/Sao_Paulo", weather: "🌧️ Chuva", icon: "cloud-rain" },
-      { name: "Rondônia", uf: "RO", tz: "America/Porto_Velho", weather: "🌦️ Chuva Fraca", icon: "cloud-drizzle" },
-      { name: "Roraima", uf: "RR", tz: "America/Boa_Vista", weather: "🌤️ Parcial", icon: "cloud-sun" },
-      { name: "Santa Catarina", uf: "SC", tz: "America/Sao_Paulo", weather: "🌤️ Fresco", icon: "wind" },
-      { name: "São Paulo", uf: "SP", tz: "America/Sao_Paulo", weather: "⛅ Nublado", icon: "cloud" },
-      { name: "Sergipe", uf: "SE", tz: "America/Maceio", weather: "☀️ Sol", icon: "sun" },
-      { name: "Tocantins", uf: "TO", tz: "America/Araguaina", weather: "🌤️ Quente", icon: "sun" },
-      { name: "Fernando de Noronha", uf: "PE-FN", tz: "America/Noronha", weather: "🌊 Brisa", icon: "wind" }
-    ];
+        function updateWeatherDisplay(data) {
+            const current = data.current;
+            const daily = data.daily;
+            
+            // Temperatura
+            document.getElementById('weatherTemp').textContent = `${Math.round(current.temperature_2m)}°C`;
+            
+            // Sensação térmica
+            document.getElementById('feelsLike').textContent = `${Math.round(current.apparent_temperature)}°C`;
+            
+            // Umidade
+            document.getElementById('humidity').textContent = `${current.relative_humidity_2m}%`;
+            
+            // Vento
+            document.getElementById('windSpeed').textContent = `${current.wind_speed_10m} km/h`;
+            
+            // Nascer do sol
+            const sunrise = new Date(daily.sunrise[0]);
+            document.getElementById('sunrise').textContent = sunrise.toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false
+            });
+            
+            // Código do clima e ícone
+            const weatherCode = current.weather_code;
+            const { icon, description } = getWeatherInfo(weatherCode);
+            
+            document.getElementById('weatherDesc').textContent = description;
+            
+            // Atualizar ícone Lucide
+            const iconContainer = document.getElementById('weatherIcon');
+            iconContainer.innerHTML = `<i data-lucide="${icon}" style="width: 120px; height: 120px; color: var(--primary);"></i>`;
+            lucide.createIcons();
+        }
 
-    const grid = document.getElementById('states-grid');
+        function getWeatherInfo(code) {
+            // Códigos WMO: https://open-meteo.com/en/docs
+            const weatherMap = {
+                0: { icon: 'sun', description: 'Céu limpo' },
+                1: { icon: 'sun', description: 'Principalmente limpo' },
+                2: { icon: 'cloud-sun', description: 'Parcialmente nublado' },
+                3: { icon: 'cloud', description: 'Nublado' },
+                45: { icon: 'cloud', description: 'Nevoeiro' },
+                48: { icon: 'cloud', description: 'Nevoeiro com geada' },
+                51: { icon: 'cloud-drizzle', description: 'Garoa leve' },
+                53: { icon: 'cloud-drizzle', description: 'Garoa moderada' },
+                55: { icon: 'cloud-drizzle', description: 'Garoa densa' },
+                61: { icon: 'cloud-rain', description: 'Chuva fraca' },
+                63: { icon: 'cloud-rain', description: 'Chuva moderada' },
+                65: { icon: 'cloud-rain', description: 'Chuva forte' },
+                71: { icon: 'snowflake', description: 'Neve fraca' },
+                73: { icon: 'snowflake', description: 'Neve moderada' },
+                75: { icon: 'snowflake', description: 'Neve forte' },
+                95: { icon: 'cloud-lightning', description: 'Tempestade' },
+                96: { icon: 'cloud-lightning', description: 'Tempestade com granizo' },
+                99: { icon: 'cloud-lightning', description: 'Tempestade forte' }
+            };
+            
+            return weatherMap[code] || { icon: 'cloud', description: 'Condição desconhecida' };
+        }
 
-    // 🕒 RELÓGIO EM TEMPO REAL
-    function formatTime(date) {
-      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Iniciar background
+            resizeBg();
+            animateBg();
+            
+            // Iniciar relógio
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Buscar clima
+            fetchWeather();
+            setInterval(fetchWeather, 600000); // Atualizar a cada 10 minutos
+            
+            // Inicializar ícones Lucide
+            lucide.createIcons();
+            
+            // Inicializar globo na página inicial
+            setTimeout(() => initGlobe(), 100);
+        });
 
-    function updateClocks() {
-      const now = new Date();
-      document.getElementById('main-clock').textContent = formatTime(now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }));
-      
-      states.forEach(s => {
-        const el = document.getElementById(`clock-${s.uf}`);
-        if (el) el.textContent = formatTime(now.toLocaleString('pt-BR', { timeZone: s.tz }));
-      });
-    }
-
-    // 🏗️ RENDERIZAR CARDS
-    states.forEach(s => {
-      const card = document.createElement('div');
-      card.className = 'state-card';
-      card.innerHTML = `
-        <div class="state-header">
-          <span class="state-name">${s.name}</span>
-          <span class="state-tz">${s.tz.split('/')[1].replace('_', ' ')}</span>
-        </div>
-        <div class="time-display" id="clock-${s.uf}">--:--:--</div>
-        <div class="weather">
-          <span class="weather-icon">${s.weather.split(' ')[0]}</span>
-          <i data-lucide="${s.icon}" style="width:18px;height:18px;opacity:0.8"></i>
-          <span class="weather-text">${s.weather.substring(s.weather.indexOf(' ')+1)}</span>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-
-    lucide.createIcons();
-    setInterval(updateClocks, 1000);
-    updateClocks();
-
-    /* 
-      💡 DICA PARA PREVISÃO REAL:
-      Substitua os dados simulados por uma API como OpenWeatherMap ou WeatherAPI.
-      Exemplo: fetch(`https://api.openweathermap.org/data/2.5/weather?q=${state},BR&appid=SUA_KEY&lang=pt_br`)
-    */
-  </script>
+        // Prevenir menu contextual no canvas do globo
+        document.getElementById('globeCanvas').addEventListener('contextmenu', e => e.preventDefault());
+    </script>
 </body>
 </html>
