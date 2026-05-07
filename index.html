@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Eco Hub</title>
+  <title>Eco Hub — Horário Mundial</title>
   <link rel="icon" href="https://cdn.discordapp.com/attachments/1495661846558933052/1501454820291121202/w27QAAAAASUVORK5CYII.png"/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet"/>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -13,9 +13,9 @@
 
   <div class="mobile-wall" id="mobileWall">
     <div class="mw-inner">
-      <i data-lucide="monitor" class="mw-icon-lucide"></i>
+      <i data-lucide="monitor" class="mw-icon"></i>
       <h1 class="mw-title">Eco Hub</h1>
-      <p class="mw-text">Esta experiência foi projetada para <strong>desktop</strong>.<br>Acesse em um computador para explorar o site completo.</p>
+      <p class="mw-text">Esta experiência foi projetada para <strong>desktop</strong>.<br>Acesse em um computador para o site completo.</p>
       <div class="mw-hint">Resolução mínima: 1024px</div>
     </div>
   </div>
@@ -25,77 +25,54 @@
     <header class="header">
       <div class="header-brand">
         <div class="header-logo-ring">
-          <img src="https://cdn.discordapp.com/attachments/1495661846558933052/1501454820291121202/w27QAAAAASUVORK5CYII.png" alt="Logo" class="header-logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+          <img src="https://cdn.discordapp.com/attachments/1495661846558933052/1501454820291121202/w27QAAAAASUVORK5CYII.png" alt="Logo" class="header-logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
           <i data-lucide="leaf" class="header-logo-icon" style="display:none"></i>
         </div>
         <span class="header-name">Eco Hub</span>
       </div>
-
-      <nav class="nav" id="nav">
-        <button class="nav-btn active" data-section="inicio">
-          <i data-lucide="house"></i> Início
-        </button>
-        <button class="nav-btn" data-section="horario">
-          <i data-lucide="clock"></i> Horário
-        </button>
-        <button class="nav-btn" data-section="sobre">
-          <i data-lucide="users"></i> Sobre Nós
-        </button>
+      <nav class="nav">
+        <button class="nav-btn active" data-section="inicio"><i data-lucide="house"></i>Início</button>
+        <button class="nav-btn" data-section="horario"><i data-lucide="clock"></i>Horário</button>
+        <button class="nav-btn" data-section="sobre"><i data-lucide="users"></i>Sobre Nós</button>
       </nav>
-
       <div class="header-right">
         <span class="header-clock" id="headerClock">--:--:--</span>
-        <div class="status-pill">
-          <span class="status-dot"></span>
-          <span>Ao vivo</span>
-        </div>
+        <div class="status-pill"><span class="status-dot"></span><span>Ao vivo</span></div>
       </div>
     </header>
 
     <main class="main">
 
+      <!-- INÍCIO -->
       <section class="section active" id="inicio">
 
         <div class="hero">
           <div class="hero-left">
-            <div class="hero-eyebrow">
-              <i data-lucide="clock-3"></i>
-              Tempo em tempo real
-            </div>
-            <h1 class="hero-title">
-              O horário<br>
-              <span class="hero-title--accent">exato</span><br>
-              agora.
-            </h1>
-            <p class="hero-desc">
-              Consulte o horário atual, fusos ao redor do mundo e previsão do tempo — sincronizado em tempo real, sem atraso.
-            </p>
+            <div class="hero-eyebrow"><i data-lucide="clock-3"></i>Tempo em tempo real</div>
+            <h1 class="hero-title">O horário<br><span>exato</span><br>agora.</h1>
+            <p class="hero-desc">Consulte o horário atual, fusos ao redor do mundo e previsão do tempo — sincronizado em tempo real, sem atraso.</p>
             <div class="hero-chips">
-              <span class="chip"><i data-lucide="clock"></i> Horário Local</span>
-              <span class="chip"><i data-lucide="globe"></i> Fusos Globais</span>
-              <span class="chip"><i data-lucide="cloud-sun"></i> Clima</span>
+              <span class="chip"><i data-lucide="clock"></i>Horário Local</span>
+              <span class="chip"><i data-lucide="globe"></i>Fusos Globais</span>
+              <span class="chip"><i data-lucide="cloud-sun"></i>Clima</span>
+              <span class="chip"><i data-lucide="refresh-cw"></i>Tempo Real</span>
             </div>
             <div class="hero-actions">
-              <button class="btn-primary" onclick="goTo('horario')">
-                <i data-lucide="clock-4"></i> Ver Horários
-              </button>
-              <button class="btn-ghost" onclick="goTo('sobre')">
-                Sobre Nós <i data-lucide="arrow-right"></i>
-              </button>
+              <button class="btn-primary" onclick="goTo('horario')"><i data-lucide="clock-4"></i>Ver Horários</button>
+              <button class="btn-ghost" onclick="goTo('sobre')">Sobre Nós<i data-lucide="arrow-right"></i></button>
             </div>
           </div>
-
           <div class="hero-right">
             <div class="globe-wrap">
               <canvas id="globeCanvas" class="globe-canvas"></canvas>
-            </div>
-            <div class="globe-card globe-card--top">
-              <i data-lucide="clock" class="gcard-icon"></i>
-              <div><div class="gcard-val" id="heroLocalTime">--:--</div><div class="gcard-lbl">horário local</div></div>
-            </div>
-            <div class="globe-card globe-card--bottom">
-              <i data-lucide="globe-2" class="gcard-icon"></i>
-              <div><div class="gcard-val">7</div><div class="gcard-lbl">fusos ativos</div></div>
+              <div class="globe-card globe-card--top">
+                <i data-lucide="clock" class="gcard-icon"></i>
+                <div><div class="gcard-val" id="heroLocalTime">--:--</div><div class="gcard-lbl">horário local</div></div>
+              </div>
+              <div class="globe-card globe-card--bottom">
+                <i data-lucide="globe-2" class="gcard-icon"></i>
+                <div><div class="gcard-val">7</div><div class="gcard-lbl">fusos ativos</div></div>
+              </div>
             </div>
           </div>
         </div>
@@ -111,14 +88,10 @@
           <div class="stat-sep"></div>
           <div class="stat-item"><span class="stat-num">1s</span><span class="stat-lbl">Atualização</span></div>
           <div class="stat-sep"></div>
-          <div class="stat-item"><span class="stat-num">7d</span><span class="stat-lbl">Previsão</span></div>
+          <div class="stat-item"><span class="stat-num">0</span><span class="stat-lbl">Dependências</span></div>
         </div>
 
-        <div class="divider-label">
-          <span class="divider-line"></span>
-          <span class="divider-txt"><i data-lucide="sparkles"></i> Recursos</span>
-          <span class="divider-line"></span>
-        </div>
+        <div class="section-divider"><span class="divider-line"></span><span class="divider-txt"><i data-lucide="sparkles"></i>Recursos</span><span class="divider-line"></span></div>
 
         <div class="pillars-grid">
           <div class="pillar-card">
@@ -127,31 +100,55 @@
               <h3 class="pillar-title">Horário Preciso</h3>
               <p class="pillar-text">Exibe o horário local com atualização automática a cada segundo, sem necessidade de recarregar a página.</p>
             </div>
-            <div class="pillar-footer">
-              <span class="pillar-tag">Tempo Real</span>
-              <i data-lucide="arrow-up-right" class="pillar-arrow"></i>
-            </div>
+            <div class="pillar-footer"><span class="pillar-tag">Tempo Real</span><i data-lucide="arrow-up-right" class="pillar-arrow"></i></div>
           </div>
           <div class="pillar-card">
             <div class="pillar-icon"><i data-lucide="map-pin"></i></div>
             <div class="pillar-body">
               <h3 class="pillar-title">Múltiplos Fusos</h3>
-              <p class="pillar-text">Acompanhe simultaneamente horários do Brasil e do mundo — incluindo Maringá, Rondônia, Nova York e Tóquio.</p>
+              <p class="pillar-text">Acompanhe simultaneamente horários do Brasil e do mundo — Maringá, Rondônia, Nova York, Tóquio, Dubai e mais.</p>
             </div>
-            <div class="pillar-footer">
-              <span class="pillar-tag">Global</span>
-              <i data-lucide="arrow-up-right" class="pillar-arrow"></i>
-            </div>
+            <div class="pillar-footer"><span class="pillar-tag">Global</span><i data-lucide="arrow-up-right" class="pillar-arrow"></i></div>
           </div>
           <div class="pillar-card">
             <div class="pillar-icon"><i data-lucide="cloud-sun"></i></div>
             <div class="pillar-body">
               <h3 class="pillar-title">Previsão do Tempo</h3>
-              <p class="pillar-text">Consulte a temperatura e condição climática atual de cada cidade diretamente via API pública em tempo real.</p>
+              <p class="pillar-text">Temperatura e condição climática de cada cidade via API Open-Meteo, gratuita e sem chave, atualizada a cada 10 min.</p>
             </div>
-            <div class="pillar-footer">
-              <span class="pillar-tag">Clima</span>
-              <i data-lucide="arrow-up-right" class="pillar-arrow"></i>
+            <div class="pillar-footer"><span class="pillar-tag">Clima</span><i data-lucide="arrow-up-right" class="pillar-arrow"></i></div>
+          </div>
+        </div>
+
+        <div class="section-divider"><span class="divider-line"></span><span class="divider-txt"><i data-lucide="zap"></i>Como funciona</span><span class="divider-line"></span></div>
+
+        <div class="how-grid">
+          <div class="how-card">
+            <span class="how-num">01</span>
+            <div>
+              <h4 class="how-title">Relógio do sistema</h4>
+              <p class="how-text">Zero latência. O horário vem diretamente do seu dispositivo e é atualizado exatamente a cada segundo via JavaScript.</p>
+            </div>
+          </div>
+          <div class="how-card">
+            <span class="how-num">02</span>
+            <div>
+              <h4 class="how-title">Cálculo matemático de fusos</h4>
+              <p class="how-text">Os offsets UTC são calculados diretamente, sem depender de nenhuma API externa para os horários globais.</p>
+            </div>
+          </div>
+          <div class="how-card">
+            <span class="how-num">03</span>
+            <div>
+              <h4 class="how-title">Clima via Open-Meteo</h4>
+              <p class="how-text">Temperatura e código WMO de cada cidade buscados da API gratuita Open-Meteo com coordenadas de precisão.</p>
+            </div>
+          </div>
+          <div class="how-card">
+            <span class="how-num">04</span>
+            <div>
+              <h4 class="how-title">Globo em Canvas 2D</h4>
+              <p class="how-text">Mapa-múndi animado em 3D renderizado frame a frame usando a API nativa Canvas do browser com dados TopoJSON reais.</p>
             </div>
           </div>
         </div>
@@ -161,54 +158,80 @@
             <div class="cta-icon-wrap"><i data-lucide="clock-9"></i></div>
             <div>
               <p class="cta-title">Veja o horário agora</p>
-              <p class="cta-sub">Acesse o painel completo com fusos horários e clima ao redor do mundo.</p>
+              <p class="cta-sub">Painel completo com fusos horários, clima e referência UTC.</p>
             </div>
           </div>
-          <button class="btn-primary" onclick="goTo('horario')">
-            <i data-lucide="arrow-right-circle"></i> Ir para Horários
-          </button>
+          <button class="btn-primary" onclick="goTo('horario')"><i data-lucide="arrow-right-circle"></i>Ir para Horários</button>
         </div>
 
       </section>
 
+      <!-- HORÁRIO -->
       <section class="section" id="horario">
 
         <div class="section-header">
           <h2 class="section-title">Horário</h2>
-          <p class="section-desc">Horário atual em tempo real, com fusos horários globais e previsão do tempo por cidade.</p>
+          <p class="section-desc">Horário em tempo real com fusos globais e clima por cidade — atualizado segundo a segundo.</p>
         </div>
 
-        <div class="time-section">
-          <div class="time-header">
-            <span class="time-label">Horário Local</span>
-            <span class="time-date" id="dateDisplay"></span>
+        <div class="clock-hero-panel">
+          <div class="clock-main-block">
+            <div class="clock-label-row">
+              <span class="time-label">Horário Local</span>
+              <span class="time-date" id="dateDisplay">--</span>
+            </div>
+            <div class="big-clock" id="bigClock">--:--:--</div>
+            <div class="clock-meta-row">
+              <div class="clock-meta-item"><i data-lucide="map-pin"></i><span id="clockCity">Carregando...</span></div>
+              <div class="clock-meta-sep"></div>
+              <div class="clock-meta-item"><i data-lucide="globe-2"></i><span>UTC <span id="clockUTC">--</span></span></div>
+              <div class="clock-meta-sep"></div>
+              <div class="clock-meta-item"><i data-lucide="sun"></i><span id="clockWxLocal">--</span></div>
+            </div>
           </div>
-          <div class="time-display" id="bigClock">--:--:--</div>
+          <div class="clock-mini-panel">
+            <div class="clock-mini-card">
+              <div class="cmc-top"><span class="cmc-city">São Paulo</span><span class="cmc-flag">🇧🇷</span></div>
+              <div class="cmc-time" id="cm-sp">--:--</div>
+              <div class="cmc-offset">UTC −3</div>
+            </div>
+            <div class="clock-mini-card">
+              <div class="cmc-top"><span class="cmc-city">Nova York</span><span class="cmc-flag">🇺🇸</span></div>
+              <div class="cmc-time" id="cm-ny">--:--</div>
+              <div class="cmc-offset">UTC −4</div>
+            </div>
+            <div class="clock-mini-card">
+              <div class="cmc-top"><span class="cmc-city">Londres</span><span class="cmc-flag">🇬🇧</span></div>
+              <div class="cmc-time" id="cm-london">--:--</div>
+              <div class="cmc-offset">UTC +1</div>
+            </div>
+            <div class="clock-mini-card">
+              <div class="cmc-top"><span class="cmc-city">Tóquio</span><span class="cmc-flag">🇯🇵</span></div>
+              <div class="cmc-time" id="cm-tokyo">--:--</div>
+              <div class="cmc-offset">UTC +9</div>
+            </div>
+          </div>
         </div>
 
-        <div class="divider-label" style="margin-bottom:24px">
-          <span class="divider-line"></span>
-          <span class="divider-txt"><i data-lucide="map-pin"></i> Brasil</span>
-          <span class="divider-line"></span>
-        </div>
+        <div class="section-divider" style="margin-bottom:24px"><span class="divider-line"></span><span class="divider-txt"><i data-lucide="map-pin"></i>Brasil</span><span class="divider-line"></span></div>
 
-        <div class="timezone-grid brasil-grid">
+        <div class="tz-grid tz-grid--3">
           <div class="tz-card tz-card--brasil">
-            <div class="tz-region-badge">Brasil</div>
+            <div class="tz-card-top"><div class="tz-badge">Brasil</div><span class="tz-flag">🇧🇷</span></div>
             <div class="tz-city">São Paulo</div>
             <div class="tz-time" id="tz-sp">--:--</div>
             <div class="tz-offset">UTC −3 · BRT</div>
             <div class="tz-weather" id="wx-sp"><i data-lucide="loader-2" class="wx-spin"></i></div>
           </div>
           <div class="tz-card tz-card--brasil">
-            <div class="tz-region-badge">Brasil</div>
+            <div class="tz-card-top"><div class="tz-badge">Brasil</div><span class="tz-flag">🇧🇷</span></div>
             <div class="tz-city">Maringá · PR</div>
             <div class="tz-time" id="tz-maringa">--:--</div>
             <div class="tz-offset">UTC −3 · BRT</div>
             <div class="tz-weather" id="wx-maringa"><i data-lucide="loader-2" class="wx-spin"></i></div>
           </div>
           <div class="tz-card tz-card--brasil">
-            <div class="tz-region-badge">Brasil</div>
+            <div class="tz-card-top"><div class="tz-badge">Brasil</div><span class="tz-flag">🇧🇷</span></div>
             <div class="tz-city">Rondônia</div>
             <div class="tz-time" id="tz-rondonia">--:--</div>
             <div class="tz-offset">UTC −4 · AMT</div>
@@ -216,41 +239,53 @@
           </div>
         </div>
 
-        <div class="divider-label" style="margin-bottom:24px;margin-top:40px">
-          <span class="divider-line"></span>
-          <span class="divider-txt"><i data-lucide="globe-2"></i> Mundo</span>
-          <span class="divider-line"></span>
-        </div>
+        <div class="section-divider" style="margin-top:40px;margin-bottom:24px"><span class="divider-line"></span><span class="divider-txt"><i data-lucide="globe-2"></i>Mundo</span><span class="divider-line"></span></div>
 
-        <div class="timezone-grid mundo-grid">
+        <div class="tz-grid tz-grid--4">
           <div class="tz-card">
-            <div class="tz-city">Nova York</div>
+            <div class="tz-card-top"><div class="tz-city">Nova York</div><span class="tz-flag">🇺🇸</span></div>
             <div class="tz-time" id="tz-ny">--:--</div>
             <div class="tz-offset">UTC −4 · EDT</div>
             <div class="tz-weather" id="wx-ny"><i data-lucide="loader-2" class="wx-spin"></i></div>
           </div>
           <div class="tz-card">
-            <div class="tz-city">Londres</div>
+            <div class="tz-card-top"><div class="tz-city">Londres</div><span class="tz-flag">🇬🇧</span></div>
             <div class="tz-time" id="tz-london">--:--</div>
             <div class="tz-offset">UTC +1 · BST</div>
             <div class="tz-weather" id="wx-london"><i data-lucide="loader-2" class="wx-spin"></i></div>
           </div>
           <div class="tz-card">
-            <div class="tz-city">Tóquio</div>
+            <div class="tz-card-top"><div class="tz-city">Tóquio</div><span class="tz-flag">🇯🇵</span></div>
             <div class="tz-time" id="tz-tokyo">--:--</div>
             <div class="tz-offset">UTC +9 · JST</div>
             <div class="tz-weather" id="wx-tokyo"><i data-lucide="loader-2" class="wx-spin"></i></div>
           </div>
           <div class="tz-card">
-            <div class="tz-city">Dubai</div>
+            <div class="tz-card-top"><div class="tz-city">Dubai</div><span class="tz-flag">🇦🇪</span></div>
             <div class="tz-time" id="tz-dubai">--:--</div>
             <div class="tz-offset">UTC +4 · GST</div>
             <div class="tz-weather" id="wx-dubai"><i data-lucide="loader-2" class="wx-spin"></i></div>
           </div>
         </div>
 
+        <div class="section-divider" style="margin-top:44px;margin-bottom:24px"><span class="divider-line"></span><span class="divider-txt"><i data-lucide="table-2"></i>Referência UTC</span><span class="divider-line"></span></div>
+
+        <div class="utc-table">
+          <div class="utc-row utc-head">
+            <span>Cidade</span><span>Fuso</span><span>Diferença de Brasília</span><span>Sigla</span>
+          </div>
+          <div class="utc-row"><span><span class="tz-flag sm">🇧🇷</span>São Paulo</span><span>UTC −3</span><span>—</span><span>BRT</span></div>
+          <div class="utc-row"><span><span class="tz-flag sm">🇧🇷</span>Maringá</span><span>UTC −3</span><span>—</span><span>BRT</span></div>
+          <div class="utc-row"><span><span class="tz-flag sm">🇧🇷</span>Rondônia</span><span>UTC −4</span><span>−1h</span><span>AMT</span></div>
+          <div class="utc-row"><span><span class="tz-flag sm">🇺🇸</span>Nova York</span><span>UTC −4</span><span>−1h</span><span>EDT</span></div>
+          <div class="utc-row"><span><span class="tz-flag sm">🇬🇧</span>Londres</span><span>UTC +1</span><span>+4h</span><span>BST</span></div>
+          <div class="utc-row"><span><span class="tz-flag sm">🇦🇪</span>Dubai</span><span>UTC +4</span><span>+7h</span><span>GST</span></div>
+          <div class="utc-row"><span><span class="tz-flag sm">🇯🇵</span>Tóquio</span><span>UTC +9</span><span>+12h</span><span>JST</span></div>
+        </div>
+
       </section>
 
+      <!-- SOBRE -->
       <section class="section" id="sobre">
 
         <div class="section-header">
@@ -258,62 +293,90 @@
           <p class="section-desc">Conheça a origem e a tecnologia por trás do Eco Hub.</p>
         </div>
 
-        <div class="about-featured">
+        <div class="about-grid">
           <div class="about-feat-left">
-            <div class="about-feat-badge">
-              <i data-lucide="bot"></i>
-              Projeto de IA
-            </div>
+            <div class="about-badge"><i data-lucide="bot"></i>Projeto de IA</div>
             <h3 class="about-feat-title">Criado por inteligência artificial de ponta</h3>
-            <p class="about-feat-text">O Eco Hub foi inteiramente desenvolvido por inteligência artificial — uma das mais avançadas disponíveis hoje em dia. Desde o design até o código, cada detalhe foi gerado e refinado por IA.</p>
+            <p class="about-feat-text">O Eco Hub foi inteiramente desenvolvido por inteligência artificial — uma das mais avançadas disponíveis hoje. Desde o design até o código, cada detalhe foi gerado e refinado por IA.</p>
             <p class="about-feat-text">Este projeto representa o que é possível quando criatividade humana encontra o poder da IA moderna: ideias transformadas em produto real, com velocidade e precisão.</p>
-            <div class="about-feat-tags">
-              <span class="about-tag"><i data-lucide="code-2"></i> HTML / CSS / JS</span>
-              <span class="about-tag"><i data-lucide="zap"></i> APIs Públicas</span>
-              <span class="about-tag"><i data-lucide="cpu"></i> 100% IA</span>
+            <div class="about-tags">
+              <span class="about-tag"><i data-lucide="code-2"></i>HTML / CSS / JS</span>
+              <span class="about-tag"><i data-lucide="zap"></i>APIs Públicas</span>
+              <span class="about-tag"><i data-lucide="cpu"></i>100% IA</span>
+              <span class="about-tag"><i data-lucide="globe-2"></i>TopoJSON</span>
             </div>
           </div>
-          <div class="about-feat-right">
-            <div class="about-author-card">
-              <div class="author-avatar">
-                <i data-lucide="user-round"></i>
-              </div>
-              <div class="author-badge"><i data-lucide="lightbulb"></i> Criador</div>
-              <h4 class="author-name">rip_sheldoohz</h4>
-              <p class="author-desc">A visão, os conceitos e a direção criativa deste projeto pertencem a <strong>rip_sheldoohz</strong> — a mente humana responsável por imaginar e dar forma à ideia que a IA executou.</p>
-              <div class="author-divider"></div>
-              <p class="author-quote">"A melhor tecnologia nasce quando pessoas e inteligência artificial trabalham juntas."</p>
-            </div>
+          <div class="about-author-card">
+            <div class="author-avatar"><i data-lucide="user-round"></i></div>
+            <div class="author-role"><i data-lucide="lightbulb"></i>Criador</div>
+            <h4 class="author-name">rip_sheldoohz</h4>
+            <p class="author-desc">A visão, os conceitos e a direção criativa deste projeto pertencem a <strong>rip_sheldoohz</strong> — a mente humana responsável por imaginar e dar forma à ideia que a IA executou.</p>
+            <div class="author-divider"></div>
+            <p class="author-quote">"A melhor tecnologia nasce quando pessoas e inteligência artificial trabalham juntas."</p>
           </div>
         </div>
 
-        <div class="divider-label" style="margin-bottom:28px">
-          <span class="divider-line"></span>
-          <span class="divider-txt"><i data-lucide="cpu"></i> Tecnologia</span>
-          <span class="divider-line"></span>
+        <div class="section-divider" style="margin-bottom:28px"><span class="divider-line"></span><span class="divider-txt"><i data-lucide="bar-chart-2"></i>Números</span><span class="divider-line"></span></div>
+
+        <div class="about-stats">
+          <div class="about-stat-card">
+            <i data-lucide="bot" class="asc-icon"></i>
+            <span class="asc-num">100%</span>
+            <span class="asc-lbl">Gerado por IA</span>
+          </div>
+          <div class="about-stat-card">
+            <i data-lucide="code-2" class="asc-icon"></i>
+            <span class="asc-num">3</span>
+            <span class="asc-lbl">Arquivos de código</span>
+          </div>
+          <div class="about-stat-card">
+            <i data-lucide="cloud-sun" class="asc-icon"></i>
+            <span class="asc-num">2</span>
+            <span class="asc-lbl">APIs públicas</span>
+          </div>
+          <div class="about-stat-card">
+            <i data-lucide="user-check" class="asc-icon"></i>
+            <span class="asc-num">1</span>
+            <span class="asc-lbl">Criador humano</span>
+          </div>
         </div>
 
-        <div class="about-stats-row">
-          <div class="about-stat">
-            <i data-lucide="bot" class="about-stat-icon"></i>
-            <span class="about-stat-num">100%</span>
-            <span class="about-stat-label">Gerado por IA</span>
+        <div class="section-divider" style="margin-top:52px;margin-bottom:28px"><span class="divider-line"></span><span class="divider-txt"><i data-lucide="layers"></i>Stack</span><span class="divider-line"></span></div>
+
+        <div class="stack-grid">
+          <div class="stack-card">
+            <div class="stack-icon"><i data-lucide="file-code-2"></i></div>
+            <div><div class="stack-name">HTML5</div><div class="stack-desc">Estrutura semântica do site, sem frameworks.</div></div>
           </div>
-          <div class="about-stat">
-            <i data-lucide="code-2" class="about-stat-icon"></i>
-            <span class="about-stat-num">3</span>
-            <span class="about-stat-label">Arquivos de código</span>
+          <div class="stack-card">
+            <div class="stack-icon"><i data-lucide="palette"></i></div>
+            <div><div class="stack-name">CSS3 Custom Properties</div><div class="stack-desc">Design system com tokens de cor e tipografia.</div></div>
           </div>
-          <div class="about-stat">
-            <i data-lucide="cloud-sun" class="about-stat-icon"></i>
-            <span class="about-stat-num">2</span>
-            <span class="about-stat-label">APIs públicas</span>
+          <div class="stack-card">
+            <div class="stack-icon"><i data-lucide="code-2"></i></div>
+            <div><div class="stack-name">JavaScript Puro</div><div class="stack-desc">Relógio, fusos e globo 3D sem nenhum framework.</div></div>
           </div>
-          <div class="about-stat">
-            <i data-lucide="user-check" class="about-stat-icon"></i>
-            <span class="about-stat-num">1</span>
-            <span class="about-stat-label">Criador humano</span>
+          <div class="stack-card">
+            <div class="stack-icon"><i data-lucide="monitor"></i></div>
+            <div><div class="stack-name">Canvas 2D API</div><div class="stack-desc">Globo animado frame a frame via API nativa do browser.</div></div>
           </div>
+          <div class="stack-card">
+            <div class="stack-icon"><i data-lucide="cloud-sun"></i></div>
+            <div><div class="stack-name">Open-Meteo API</div><div class="stack-desc">Clima gratuito por coordenada, sem chave necessária.</div></div>
+          </div>
+          <div class="stack-card">
+            <div class="stack-icon"><i data-lucide="globe-2"></i></div>
+            <div><div class="stack-name">World Atlas TopoJSON</div><div class="stack-desc">Fronteiras reais dos países para o globo 3D.</div></div>
+          </div>
+        </div>
+
+        <div class="about-cta-bar">
+          <i data-lucide="clock-4" class="acb-icon"></i>
+          <div class="acb-text">
+            <p class="acb-title">Pronto para explorar?</p>
+            <p class="acb-sub">Veja o horário de cada canto do mundo agora mesmo.</p>
+          </div>
+          <button class="btn-primary" onclick="goTo('horario')"><i data-lucide="arrow-right"></i>Ver Horários</button>
         </div>
 
       </section>
@@ -322,23 +385,15 @@
 
     <footer class="footer">
       <div class="footer-left">
-        <div class="footer-logo-ring">
-          <i data-lucide="leaf" class="footer-logo-icon"></i>
-        </div>
+        <div class="footer-logo-ring"><i data-lucide="leaf" class="footer-logo-icon"></i></div>
         <span class="footer-name">Eco Hub</span>
       </div>
       <div class="footer-center">
-        <span class="footer-made">
-          <i data-lucide="user-round"></i>
-          made by <strong>rip_sheldoohz</strong>
-        </span>
-        <span class="footer-sep">·</span>
-        <span class="footer-ai">
-          <i data-lucide="bot"></i>
-          built with <strong>Claude</strong>
-        </span>
+        <span class="footer-credit"><i data-lucide="user-round"></i>made by <strong>rip_sheldoohz</strong></span>
+        <span class="footer-dot">·</span>
+        <span class="footer-credit"><i data-lucide="bot"></i>built with <strong>Claude</strong></span>
       </div>
-      <div class="footer-right" id="footerYear">© 2025</div>
+      <div class="footer-year" id="footerYear">© 2025</div>
     </footer>
 
   </div>

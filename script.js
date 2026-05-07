@@ -34,36 +34,44 @@ function pad(v) {
   return String(v).padStart(2, '0');
 }
 
+function getUTCOffsetString() {
+  const off = -new Date().getTimezoneOffset();
+  const sign = off >= 0 ? '+' : '-';
+  const h = Math.floor(Math.abs(off) / 60);
+  const m = Math.abs(off) % 60;
+  return sign + pad(h) + (m ? ':' + pad(m) : '');
+}
+
 function updateClock() {
   const n = new Date();
-  const time = `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+  const hms = `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+  const hm = `${pad(n.getHours())}:${pad(n.getMinutes())}`;
 
-  const headerEl = document.getElementById('headerClock');
-  if (headerEl) headerEl.textContent = time;
-
-  const bigEl = document.getElementById('bigClock');
-  if (bigEl) bigEl.textContent = time;
+  const ids = ['headerClock', 'bigClock'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = hms; });
 
   const heroTime = document.getElementById('heroLocalTime');
-  if (heroTime) heroTime.textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}`;
+  if (heroTime) heroTime.textContent = hm;
+
+  const utcEl = document.getElementById('clockUTC');
+  if (utcEl) utcEl.textContent = getUTCOffsetString();
 
   const nowUTC = n.getTime() + n.getTimezoneOffset() * 60000;
 
   const zones = [
-    { id: 'tz-sp',       offset: -3 },
-    { id: 'tz-maringa',  offset: -3 },
-    { id: 'tz-rondonia', offset: -4 },
-    { id: 'tz-ny',       offset: -4 },
-    { id: 'tz-london',   offset:  1 },
-    { id: 'tz-tokyo',    offset:  9 },
-    { id: 'tz-dubai',    offset:  4 },
+    { ids: ['tz-sp',  'cm-sp'],       offset: -3 },
+    { ids: ['tz-maringa'],             offset: -3 },
+    { ids: ['tz-rondonia'],            offset: -4 },
+    { ids: ['tz-ny',  'cm-ny'],        offset: -4 },
+    { ids: ['tz-london', 'cm-london'], offset:  1 },
+    { ids: ['tz-tokyo',  'cm-tokyo'],  offset:  9 },
+    { ids: ['tz-dubai'],               offset:  4 },
   ];
 
   zones.forEach(z => {
-    const el = document.getElementById(z.id);
-    if (!el) return;
     const local = new Date(nowUTC + z.offset * 3600000);
-    el.textContent = `${pad(local.getHours())}:${pad(local.getMinutes())}`;
+    const t = `${pad(local.getHours())}:${pad(local.getMinutes())}`;
+    z.ids.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = t; });
   });
 }
 
@@ -76,15 +84,32 @@ function setDateDisplay() {
   el.textContent = `${days[n.getDay()]}, ${n.getDate()} de ${months[n.getMonth()]} de ${n.getFullYear()}`;
 }
 
+function setClockCity() {
+  const el = document.getElementById('clockCity');
+  if (!el) return;
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const city = tz.split('/').pop().replace(/_/g, ' ');
+    el.textContent = city;
+  } catch (e) {
+    el.textContent = 'Local';
+  }
+}
+
+function setYear() {
+  const el = document.getElementById('footerYear');
+  if (el) el.textContent = `© ${new Date().getFullYear()}`;
+}
+
 function initTicker() {
-  const icons = ['clock','globe-2','timer','map-pin','calendar-days','refresh-cw','clock-3','compass','satellite','hourglass'];
-  const labels = ['Horário Local','Fusos Globais','Tempo Real','Precisão','Calendário','Atualização','Sincronizado','Navegação','Digital','Exato'];
   const track = document.getElementById('tickerTrack');
   if (!track) return;
+  const icons = ['clock','globe-2','timer','map-pin','calendar-days','refresh-cw','clock-3','compass','satellite','hourglass'];
+  const labels = ['Horário Local','Fusos Globais','Tempo Real','Precisão','Calendário','Atualização','Sincronizado','Navegação','Digital','Exato'];
   const doubled = [...labels, ...labels];
   const doubledIcons = [...icons, ...icons];
-  track.innerHTML = doubled.map((label, i) =>
-    `<span class="ticker-item"><i data-lucide="${doubledIcons[i % doubledIcons.length]}"></i>${label}<span class="ticker-dot"></span></span>`
+  track.innerHTML = doubled.map((lbl, i) =>
+    `<span class="ticker-item"><i data-lucide="${doubledIcons[i % doubledIcons.length]}"></i>${lbl}<span class="ticker-dot"></span></span>`
   ).join('');
   lucide.createIcons();
 }
@@ -100,10 +125,14 @@ async function fetchWeather() {
     { id: 'wx-dubai',    lat: 25.20,  lon: 55.27  },
   ];
 
+  const localCity = cities[1];
+  const localWxEl = document.getElementById('clockWxLocal');
+
   for (const c of cities) {
     try {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,weathercode&timezone=auto`;
       const res = await fetch(url);
+      if (!res.ok) throw new Error('fetch failed');
       const data = await res.json();
       const temp = Math.round(data.current.temperature_2m);
       const code = data.current.weathercode;
@@ -112,7 +141,10 @@ async function fetchWeather() {
         el.innerHTML = `<i data-lucide="${wmoIcon(code)}"></i><span class="wx-temp">${temp}°C</span><span class="wx-desc">${wmoDesc(code)}</span>`;
         lucide.createIcons();
       }
-    } catch (e) {
+      if (c.id === 'wx-maringa' && localWxEl) {
+        localWxEl.textContent = `${temp}°C · ${wmoDesc(code)}`;
+      }
+    } catch (_) {
       const el = document.getElementById(c.id);
       if (el) el.innerHTML = `<span class="wx-desc">—</span>`;
     }
@@ -143,258 +175,229 @@ function wmoIcon(code) {
   return 'cloud-lightning';
 }
 
-async function loadGeoFeatures() {
+async function loadGeoPolygons() {
   const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+  if (!res.ok) throw new Error('geo fetch failed');
   const topo = await res.json();
+
   const arcs = topo.arcs;
-  const geoms = topo.objects.countries.geometries;
-
-  function arcPoints(arcIdx) {
-    const inv = arcIdx < 0;
-    const realIdx = inv ? ~arcIdx : arcIdx;
-    const arc = arcs[realIdx];
-    let x = 0, y = 0;
-    const raw = arc.map(d => { x += d[0]; y += d[1]; return [x, y]; });
-    const seq = inv ? raw.slice().reverse() : raw;
-    const pts = [];
-    for (const [px, py] of seq) pts.push(px, py);
-    return pts;
-  }
-
-  function ringPoints(ring) {
-    const pts = [];
-    for (const arcIdx of ring) pts.push(...arcPoints(arcIdx));
-    return pts;
-  }
-
   const { scale: [sx, sy], translate: [tx, ty] } = topo.transform;
 
-  function toLatLon(qx, qy) {
-    return [qy * sy + ty, qx * sx + tx];
+  function decodeArc(idx) {
+    const inv = idx < 0;
+    const raw = arcs[inv ? ~idx : idx];
+    let x = 0, y = 0;
+    const pts = raw.map(d => { x += d[0]; y += d[1]; return [x, y]; });
+    const seq = inv ? pts.reverse() : pts; return seq.map(([qx, qy]) => { const lon = qx * sx + tx; const lat = qy * sy + ty; return [lat, lon]; });
+  }
+
+  function decodeRing(ring) {
+    return ring.flatMap(i => decodeArc(i));
   }
 
   const polys = [];
 
-  function processGeom(geom) {
-    const rings = geom.type === 'Polygon' ? [geom.arcs] : geom.arcs;
-    for (const poly of rings) {
-      for (const ring of poly) {
-        const pts = ringPoints(ring);
-        const latLons = [];
-        for (let i = 0; i < pts.length; i += 2) latLons.push(toLatLon(pts[i], pts[i + 1]));
-        if (latLons.length >= 3) polys.push(latLons);
+  function processGeom(g) {
+    const groups = g.type === 'Polygon' ? [g.arcs] : g.arcs;
+    for (const group of groups) {
+      for (const ring of group) {
+        const pts = decodeRing(ring);
+        if (pts.length >= 3) polys.push(pts);
       }
     }
   }
 
-  for (const g of geoms) {
+  for (const g of topo.objects.countries.geometries) {
     if (g.type === 'Polygon' || g.type === 'MultiPolygon') processGeom(g);
   }
+
   return polys;
 }
 
-async function initDotGlobe() {
+function ll2xyz(lat, lon) {
+  const la = lat * Math.PI / 180;
+  const lo = lon * Math.PI / 180;
+  return [Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)];
+}
+
+async function initGlobe() {
   const canvas = document.getElementById('globeCanvas');
   if (!canvas) return;
 
-  const size = 460;
-  canvas.width = size;
-  canvas.height = size;
-  canvas.style.width = size + 'px';
-  canvas.style.height = size + 'px';
+  const SIZE = 460;
+  canvas.width = SIZE;
+  canvas.height = SIZE;
+  canvas.style.width = SIZE + 'px';
+  canvas.style.height = SIZE + 'px';
 
   const ctx = canvas.getContext('2d');
-  const W = size, H = size;
-  const cx = W / 2, cy = H / 2;
-  const R = Math.min(W, H) * 0.44;
+  const CX = SIZE / 2, CY = SIZE / 2;
+  const R = SIZE * 0.44;
 
-  let geoPolys = [];
+  let polys3D = [];
   try {
-    geoPolys = await loadGeoFeatures();
-  } catch (e) {
-    geoPolys = [];
+    const raw = await loadGeoPolygons();
+    polys3D = raw.map(ring => ring.map(([lat, lon]) => ll2xyz(lat, lon)));
+  } catch (_) {
+    polys3D = [];
   }
 
-  function latLonToXYZ(lat, lon) {
-    const latR = lat * Math.PI / 180;
-    const lonR = lon * Math.PI / 180;
-    return [
-      Math.cos(latR) * Math.cos(lonR),
-      Math.sin(latR),
-      Math.cos(latR) * Math.sin(lonR),
-    ];
+  const graticules = [];
+  for (let lo = -180; lo <= 180; lo += 30) {
+    const pts = [];
+    for (let la = -90; la <= 90; la += 4) pts.push(ll2xyz(la, lo));
+    graticules.push(pts);
   }
-
-  function projectV(v, cosR, sinR) {
-    const nx = v[0] * cosR - v[2] * sinR;
-    const nz = v[0] * sinR + v[2] * cosR;
-    const ny = v[1];
-    return { nx, ny, nz, sx: cx + nx * R, sy: cy - ny * R };
+  for (let la = -60; la <= 60; la += 30) {
+    const pts = [];
+    for (let lo = -180; lo <= 180; lo += 4) pts.push(ll2xyz(la, lo));
+    graticules.push(pts);
   }
 
   const stars = [];
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 180; i++) {
     let sx, sy, d;
     do {
-      sx = Math.random() * W;
-      sy = Math.random() * H;
-      d = Math.hypot(sx - cx, sy - cy);
-    } while (d < R + 16);
-    stars.push({
-      x: sx, y: sy,
-      r: Math.random() * .9 + .1,
-      a: .025 + Math.random() * .14,
-      blink: Math.random() > .6,
-      phase: Math.random() * Math.PI * 2
-    });
-  }
-
-  const countryPolygons3D = geoPolys.map(poly =>
-    poly.map(([lat, lon]) => latLonToXYZ(lat, lon))
-  );
-
-  const graticuleLines = [];
-  for (let lon = -180; lon <= 180; lon += 30) {
-    const pts = [];
-    for (let lat = -90; lat <= 90; lat += 3) pts.push(latLonToXYZ(lat, lon));
-    graticuleLines.push(pts);
-  }
-  for (let lat = -60; lat <= 60; lat += 30) {
-    const pts = [];
-    for (let lon = -180; lon <= 180; lon += 3) pts.push(latLonToXYZ(lat, lon));
-    graticuleLines.push(pts);
+      sx = Math.random() * SIZE;
+      sy = Math.random() * SIZE;
+      d = Math.hypot(sx - CX, sy - CY);
+    } while (d < R + 14);
+    stars.push({ x: sx, y: sy, r: Math.random() * .85 + .12, a: .022 + Math.random() * .13, blink: Math.random() > .6, ph: Math.random() * Math.PI * 2 });
   }
 
   let rot = 0, tick = 0;
+  let rafId = null;
 
-  function draw() {
+  function proj(v, cr, sr) {
+    const nx = v[0] * cr - v[2] * sr;
+    const nz = v[0] * sr + v[2] * cr;
+    return { nx, ny: v[1], nz, sx: CX + nx * R, sy: CY - v[1] * R };
+  }
+
+  function frame() {
     tick++;
-    ctx.clearRect(0, 0, W, H);
+    ctx.clearRect(0, 0, SIZE, SIZE);
     ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, SIZE, SIZE);
 
     for (const s of stars) {
       let a = s.a;
-      if (s.blink) a *= .45 + .55 * Math.sin(tick * .022 + s.phase);
+      if (s.blink) a *= .45 + .55 * Math.sin(tick * .02 + s.ph);
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`;
       ctx.fill();
     }
 
-    const cosR = Math.cos(rot);
-    const sinR = Math.sin(rot);
+    const cr = Math.cos(rot), sr = Math.sin(rot);
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, R, 0, Math.PI * 2);
-    const bgG = ctx.createRadialGradient(cx - R * .25, cy - R * .25, 0, cx, cy, R);
-    bgG.addColorStop(0, '#111111');
-    bgG.addColorStop(0.5, '#0a0a0a');
-    bgG.addColorStop(1, '#050505');
-    ctx.fillStyle = bgG;
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
+    ctx.fillStyle = '#0c0c0c';
     ctx.fill();
     ctx.restore();
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
     ctx.clip();
 
-    for (const line of graticuleLines) {
+    for (const line of graticules) {
       ctx.beginPath();
       let first = true;
       for (const v of line) {
-        const p = projectV(v, cosR, sinR);
+        const p = proj(v, cr, sr);
         if (p.nz < 0) { first = true; continue; }
         if (first) { ctx.moveTo(p.sx, p.sy); first = false; }
         else ctx.lineTo(p.sx, p.sy);
       }
-      ctx.strokeStyle = 'rgba(255,255,255,0.028)';
-      ctx.lineWidth = 0.4;
+      ctx.strokeStyle = 'rgba(255,255,255,0.045)';
+      ctx.lineWidth = 0.45;
       ctx.stroke();
     }
 
-    for (const poly of countryPolygons3D) {
+    for (const poly of polys3D) {
       if (poly.length < 3) continue;
-      const projected = poly.map(v => projectV(v, cosR, sinR));
-      const frontCount = projected.filter(p => p.nz > 0).length;
-      if (frontCount < 2) continue;
+      const pp = poly.map(v => proj(v, cr, sr));
+      const frontN = pp.reduce((s, p) => s + (p.nz > 0 ? 1 : 0), 0);
+      if (frontN < 2) continue;
+
+      const rawAvg = pp.reduce((s, p) => s + p.nz, 0) / pp.length;
+      const avg = Math.max(0, rawAvg);
+
+      const AMBIENT = 0.35;
+      const light = AMBIENT + (1 - AMBIENT) * avg;
 
       ctx.beginPath();
-      let firstPt = true;
-      let prevVis = false;
-      for (const p of projected) {
-        const vis = p.nz >= -0.015;
-        if (vis) {
-          if (firstPt || !prevVis) { ctx.moveTo(p.sx, p.sy); firstPt = false; }
-          else ctx.lineTo(p.sx, p.sy);
-        }
-        prevVis = vis;
+      let started = false;
+      for (let i = 0; i < pp.length; i++) {
+        const p = pp[i];
+        const vis = p.nz >= 0;
+        if (!vis) { started = false; continue; }
+        if (!started) { ctx.moveTo(p.sx, p.sy); started = true; }
+        else ctx.lineTo(p.sx, p.sy);
       }
       ctx.closePath();
 
-      const avgNz = Math.max(0, projected.reduce((s, p) => s + p.nz, 0) / projected.length);
-      const alpha = 0.12 + avgNz * 0.30;
-      const col = Math.round(160 + avgNz * 80);
+      const col = Math.round(100 + light * 120);
+      const alpha = 0.55 + light * 0.40;
       ctx.fillStyle = `rgba(${col},${col},${col},${alpha.toFixed(3)})`;
       ctx.fill();
 
-      ctx.strokeStyle = `rgba(255,255,255,${(0.07 + avgNz * 0.20).toFixed(3)})`;
+      const strokeAlpha = 0.12 + light * 0.28;
+      ctx.strokeStyle = `rgba(255,255,255,${strokeAlpha.toFixed(3)})`;
       ctx.lineWidth = 0.6;
       ctx.stroke();
     }
 
     ctx.restore();
 
-    const shimG = ctx.createRadialGradient(cx - R * .42, cy - R * .42, 0, cx - R * .08, cy - R * .06, R * .7);
-    shimG.addColorStop(0, 'rgba(255,255,255,0.06)');
-    shimG.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
     ctx.clip();
-    ctx.fillStyle = shimG;
-    ctx.fillRect(0, 0, W, H);
+    const shim = ctx.createRadialGradient(CX - R * .42, CY - R * .42, 0, CX + R * .1, CY + R * .1, R * .9);
+    shim.addColorStop(0, 'rgba(255,255,255,0.07)');
+    shim.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = shim;
+    ctx.fillRect(0, 0, SIZE, SIZE);
     ctx.restore();
 
-    const rimG = ctx.createRadialGradient(cx, cy, R * .74, cx, cy, R * 1.01);
-    rimG.addColorStop(0, 'rgba(180,180,180,0)');
-    rimG.addColorStop(1, 'rgba(180,180,180,0.06)');
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
     ctx.clip();
-    ctx.fillStyle = rimG;
-    ctx.fillRect(0, 0, W, H);
+    const rim = ctx.createRadialGradient(CX, CY, R * .68, CX, CY, R * 1.0);
+    rim.addColorStop(0, 'rgba(0,0,0,0)');
+    rim.addColorStop(1, 'rgba(0,0,0,0.55)');
+    ctx.fillStyle = rim;
+    ctx.fillRect(0, 0, SIZE, SIZE);
     ctx.restore();
 
     ctx.beginPath();
-    ctx.arc(cx, cy, R, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 1;
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
     rot += .0018;
-    requestAnimationFrame(draw);
+    rafId = requestAnimationFrame(frame);
   }
 
-  draw();
-}
-
-function setYear() {
-  const el = document.getElementById('footerYear');
-  if (el) el.textContent = `© ${new Date().getFullYear()}`;
+  if (rafId) cancelAnimationFrame(rafId);
+  frame();
 }
 
 function init() {
   lucide.createIcons();
   handleDeviceCheck();
-  initDotGlobe();
   initTicker();
   updateClock();
   setDateDisplay();
+  setClockCity();
   setYear();
+  initGlobe();
   setInterval(updateClock, 1000);
   fetchWeather();
   setInterval(fetchWeather, 10 * 60 * 1000);
